@@ -1,0 +1,8 @@
+[
+  {
+    "id": "F-QR-001",
+    "title": "Create URL QR",
+    "phase": 1,
+    "acceptance": "Given URL, when generate, then PNG/SVG produced"
+  }
+]
