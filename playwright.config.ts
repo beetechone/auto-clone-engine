@@ -17,9 +17,7 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'] },
     },
   ],
-  webServer: process.env.CI ? undefined : {
-    command: 'echo "Services should be running via docker-compose"',
-    timeout: 1000,
-    reuseExistingServer: true,
-  },
+  // Note: Services must be started manually with `make up` before running e2e tests
+  // Playwright does not manage the test server in this configuration
 });
+

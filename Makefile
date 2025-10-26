@@ -48,10 +48,5 @@ stripe_webhook:
 	stripe listen --forward-to localhost:8000/billing/webhook
 
 clean:
-	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
-	find . -type d -name "node_modules" -exec rm -rf {} + 2>/dev/null || true
-	find . -type d -name ".pytest_cache" -exec rm -rf {} + 2>/dev/null || true
-	find . -type d -name "coverage" -exec rm -rf {} + 2>/dev/null || true
-	find . -type d -name "playwright-report" -exec rm -rf {} + 2>/dev/null || true
-	find . -type d -name ".next" -exec rm -rf {} + 2>/dev/null || true
+	find . -type d \( -name "__pycache__" -o -name "node_modules" -o -name ".pytest_cache" -o -name "coverage" -o -name "playwright-report" -o -name ".next" \) -exec rm -rf {} + 2>/dev/null || true
 	@echo "✅ Cleaned build artifacts"
