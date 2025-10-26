@@ -9,7 +9,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: 20 }
+        with:
+          node-version: 20
+          cache: 'npm'
+          # Giúp cache đúng nếu có lockfile ở thư mục crawler
+          cache-dependency-path: |
+            infra/tools/crawler/package-lock.json
+            infra/tools/crawler/package.json
+
+      # CÀI DEPENDENCIES CHO CRAWLER (js-yaml, v.v.)
+      - name: Install crawler deps
+        run: |
+          npm ci --prefix infra/tools/crawler || npm --prefix infra/tools/crawler install
+
       - name: Install Playwright
         run: npm i -g playwright && npx playwright install --with-deps
       - name: Crawl target
