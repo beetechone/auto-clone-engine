@@ -22,10 +22,16 @@ export default function Editor() {
   }, [edit])
 
   const loadQRItem = async (id) => {
+    // Validate ID format to prevent request forgery
+    if (!id || typeof id !== 'string' || id.length > 100) {
+      console.error('Invalid QR item ID')
+      return
+    }
+
     const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000'
     
     try {
-      const response = await fetch(`${apiBase}/library/qr-items/${id}`, {
+      const response = await fetch(`${apiBase}/library/qr-items/${encodeURIComponent(id)}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token') || 'guest-token'}`,
         }
@@ -106,8 +112,14 @@ export default function Editor() {
         options: {}
       }
 
+      // Validate editItemId if present to prevent request forgery
+      if (editItemId && (typeof editItemId !== 'string' || editItemId.length > 100)) {
+        alert('Invalid QR code ID')
+        return
+      }
+
       const url = editItemId 
-        ? `${apiBase}/library/qr-items/${editItemId}`
+        ? `${apiBase}/library/qr-items/${encodeURIComponent(editItemId)}`
         : `${apiBase}/library/qr-items`
       
       const method = editItemId ? 'PUT' : 'POST'

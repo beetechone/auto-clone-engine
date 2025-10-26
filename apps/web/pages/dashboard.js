@@ -71,10 +71,16 @@ export default function Dashboard() {
   const handleDelete = async (id) => {
     if (!confirm('Are you sure you want to delete this QR code?')) return
     
+    // Validate ID to prevent request forgery
+    if (!id || typeof id !== 'string' || id.length > 100) {
+      alert('Invalid QR code ID')
+      return
+    }
+
     const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000'
     
     try {
-      const response = await fetch(`${apiBase}/library/qr-items/${id}`, {
+      const response = await fetch(`${apiBase}/library/qr-items/${encodeURIComponent(id)}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token') || 'guest-token'}`,
@@ -93,10 +99,16 @@ export default function Dashboard() {
   }
 
   const handleDuplicate = async (id) => {
+    // Validate ID to prevent request forgery
+    if (!id || typeof id !== 'string' || id.length > 100) {
+      alert('Invalid QR code ID')
+      return
+    }
+
     const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000'
     
     try {
-      const response = await fetch(`${apiBase}/library/qr-items/${id}/duplicate`, {
+      const response = await fetch(`${apiBase}/library/qr-items/${encodeURIComponent(id)}/duplicate`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token') || 'guest-token'}`,
