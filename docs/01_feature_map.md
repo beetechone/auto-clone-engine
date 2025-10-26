@@ -27,12 +27,58 @@ Last Updated: 2025-10-26
 - **Webhooks**: Payment event handling
 
 ### Advanced Features (Phase 3-6)
-- **Library/Dashboard**: Saved QR codes
+- **Library/Dashboard** (Phase 3 - Current):
+  - Saved QR codes list with preview
+  - Search and sort QR codes by name, type, date
+  - Pagination for large collections
+  - Folders for organization
+  - Tags for categorization
+  - Soft delete with restore capability
+  - Duplicate QR codes
+  - Export existing QR codes again
+  - Save from Editor integration
+  - Detail view for individual QR codes
 - **Analytics**: Scan tracking
 - **Templates**: Pre-configured QR styles
 - **Admin**: User management, analytics dashboard
 - **Teams**: Multi-user collaboration
 - **Custom Domains**: Branded short URLs
+
+## Phase 3 Backlog - Library & Dashboard
+
+### Library List (LIBRARY-001)
+- Display all saved QR codes for authenticated user
+- Table view with columns: Preview, Name, Type, Created, Scans, Actions
+- Pagination (default 20 per page)
+- Guest users: show "Please log in" message
+
+### Detail View (LIBRARY-002)
+- Individual QR code detail page at /dashboard/items/[id]
+- Show full QR code, metadata, creation date
+- Actions: Edit, Duplicate, Delete, Export
+
+### Bulk Actions (LIBRARY-003)
+- Select multiple QR codes
+- Bulk delete/restore
+- Bulk move to folder
+- Bulk tag assignment
+
+### Folders & Tags (LIBRARY-004)
+- Create, rename, delete folders
+- Organize QR codes into folders
+- Add/remove tags to QR codes
+- Filter by folder or tag
+
+### Search & Sort (LIBRARY-005)
+- Search by name or content
+- Sort by: name, date created, type, scans
+- Filter by: type, folder, tags, deleted status
+
+### Save from Editor (LIBRARY-006)
+- "Save" button in Editor
+- Creates new QR item in library
+- "Update" for existing items
+- Redirect to Dashboard after save
 
 ## MoSCoW Prioritization
 - **MUST**: QR generation (URL/Text), PNG/SVG export, basic auth, billing plans, route parity

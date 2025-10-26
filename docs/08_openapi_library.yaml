@@ -1,0 +1,531 @@
+openapi: 3.0.3
+info:
+  title: QR Cloner API - Library Endpoints
+  version: 0.3.0
+  description: Library and Dashboard endpoints for QR code management
+
+paths:
+  /qr-items:
+    get:
+      summary: List QR items
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+        - name: sort_by
+          in: query
+          schema:
+            type: string
+            enum: [name, created_at, updated_at, type]
+            default: created_at
+        - name: sort_order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+        - name: folder_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: tag_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: deleted
+          in: query
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: List of QR items
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/QRItem'
+                  total:
+                    type: integer
+                  page:
+                    type: integer
+                  per_page:
+                    type: integer
+        '401':
+          description: Unauthorized
+    
+    post:
+      summary: Create QR item
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QRItemCreate'
+      responses:
+        '201':
+          description: QR item created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QRItem'
+        '400':
+          description: Invalid input
+        '401':
+          description: Unauthorized
+
+  /qr-items/{id}:
+    get:
+      summary: Get QR item by ID
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: QR item details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QRItem'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not found
+    
+    put:
+      summary: Update QR item
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QRItemUpdate'
+      responses:
+        '200':
+          description: QR item updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QRItem'
+        '400':
+          description: Invalid input
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not found
+    
+    delete:
+      summary: Soft delete QR item
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: QR item deleted
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not found
+
+  /qr-items/{id}/restore:
+    post:
+      summary: Restore deleted QR item
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: QR item restored
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QRItem'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not found
+
+  /qr-items/{id}/duplicate:
+    post:
+      summary: Duplicate QR item
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '201':
+          description: QR item duplicated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QRItem'
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not found
+
+  /folders:
+    get:
+      summary: List folders
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of folders
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  folders:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Folder'
+        '401':
+          description: Unauthorized
+    
+    post:
+      summary: Create folder
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FolderCreate'
+      responses:
+        '201':
+          description: Folder created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Folder'
+        '400':
+          description: Invalid input
+        '401':
+          description: Unauthorized
+
+  /folders/{id}:
+    put:
+      summary: Update folder
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FolderUpdate'
+      responses:
+        '200':
+          description: Folder updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Folder'
+        '400':
+          description: Invalid input
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not found
+    
+    delete:
+      summary: Delete folder
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Folder deleted
+        '401':
+          description: Unauthorized
+        '404':
+          description: Not found
+
+  /tags:
+    get:
+      summary: List tags
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of tags
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tags:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Tag'
+        '401':
+          description: Unauthorized
+    
+    post:
+      summary: Create tag
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagCreate'
+      responses:
+        '201':
+          description: Tag created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+        '400':
+          description: Invalid input
+        '401':
+          description: Unauthorized
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    QRItem:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        owner_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        type:
+          type: string
+          enum: [url, text, wifi, vcard, event]
+        payload:
+          type: object
+        options:
+          type: object
+        folder_id:
+          type: string
+          format: uuid
+          nullable: true
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    
+    QRItemCreate:
+      type: object
+      required:
+        - name
+        - type
+        - payload
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        type:
+          type: string
+          enum: [url, text, wifi, vcard, event]
+        payload:
+          type: object
+        options:
+          type: object
+          default: {}
+        folder_id:
+          type: string
+          format: uuid
+          nullable: true
+        tag_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+    
+    QRItemUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        payload:
+          type: object
+        options:
+          type: object
+        folder_id:
+          type: string
+          format: uuid
+          nullable: true
+        tag_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+    
+    Folder:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        owner_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        parent_id:
+          type: string
+          format: uuid
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    
+    FolderCreate:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        parent_id:
+          type: string
+          format: uuid
+          nullable: true
+    
+    FolderUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        parent_id:
+          type: string
+          format: uuid
+          nullable: true
+    
+    Tag:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        owner_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        color:
+          type: string
+          pattern: '^#[0-9A-Fa-f]{6}$'
+        created_at:
+          type: string
+          format: date-time
+    
+    TagCreate:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 50
+        color:
+          type: string
+          pattern: '^#[0-9A-Fa-f]{6}$'
+          default: '#0070f3'
