@@ -272,8 +272,6 @@ test.describe('Phase 3 - Library & Dashboard Tests', () => {
       ];
       
       for (const url of pages) {
-        await page.goto(url);
-        
         // Page should load without errors
         const response = await page.goto(url);
         expect(response?.status()).toBe(200);
