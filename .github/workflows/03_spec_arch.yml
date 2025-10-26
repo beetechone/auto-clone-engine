@@ -1,0 +1,19 @@
+name: 03 - Specs & Architecture
+on:
+  workflow_dispatch: {}
+  push:
+    paths: ["infra/context/backlog.json"]
+jobs:
+  spec-arch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate SRS & API & Data Model (LLM agent step)
+        run: |
+          echo "[AGENT] Generate /docs/02_srs.md, /docs/04_api_spec_openapi.yaml, /docs/05_data_model.sql, /docs/07_test_plan.md from backlog.json"
+      - name: Commit docs
+        run: |
+          git config user.name agent && git config user.email agent@users.noreply.github.com
+          git add docs/*.md docs/*.yaml docs/*.sql || true
+          git commit -m "docs: SRS/API/Data model/Test plan" || echo "nothing to commit"
+          git push || true

@@ -1,0 +1,40 @@
+{
+  "crawler.run": {
+    "cmd": "node infra/tools/crawler/scripts/crawl_site.mjs --config infra/tools/crawler/crawl.config.yaml",
+    "writes": [
+      "infra/context/site_map.json",
+      "docs/01_feature_map.md"
+    ],
+    "reads": [
+      "infra/context/target_site.yaml"
+    ]
+  },
+  "features.extract": {
+    "cmd": "node infra/tools/crawler/scripts/extract_features.mjs infra/context/site_map.json > infra/context/backlog.json",
+    "writes": [
+      "infra/context/backlog.json",
+      "docs/01_feature_map.md"
+    ]
+  },
+  "generators.frontend": {
+    "cmd": "node infra/tools/generators/scaffold_frontend.mjs",
+    "writes": [
+      "apps/web",
+      "packages/ui",
+      "packages/sdk"
+    ]
+  },
+  "generators.backend": {
+    "cmd": "node infra/tools/generators/scaffold_backend.mjs",
+    "writes": [
+      "apps/api",
+      "packages/core"
+    ]
+  },
+  "generators.admin": {
+    "cmd": "node infra/tools/generators/scaffold_admin.mjs",
+    "writes": [
+      "apps/admin"
+    ]
+  }
+}

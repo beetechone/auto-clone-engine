@@ -1,0 +1,9 @@
+user_agent: "FeatureClonerBot/1.0 (contact: dev@example.com)"
+timeout_ms: 20000
+max_pages: 120
+scroll: true
+wait_for_network_idle_ms: 500
+extract: [title, 'meta[name="description"]', h1,h2,h3, buttons,links, forms,inputs,selects, '[data-analytics]']
+outputs:
+  site_map_json: "infra/context/site_map.json"
+  feature_map_md: "docs/01_feature_map.md"

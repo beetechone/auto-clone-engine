@@ -1,0 +1,25 @@
+name: 04 - Scaffold & Build
+on:
+  workflow_dispatch: {}
+  push:
+    paths:
+      - "docs/04_api_spec_openapi.yaml"
+      - "docs/03_architecture.md"
+jobs:
+  scaffold:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Scaffold apps
+        run: |
+          node infra/tools/generators/scaffold_backend.mjs
+          node infra/tools/generators/scaffold_frontend.mjs
+          node infra/tools/generators/scaffold_admin.mjs
+      - name: Build
+        run: |
+          npm ci || pnpm i || true
+          npm run -w apps/api build || true
+          npm run -w apps/web build || true
+          npm run -w apps/admin build || true

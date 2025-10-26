@@ -1,0 +1,12 @@
+name: Feature request
+labels: [feature, triage]
+body:
+  - type: textarea
+    id: summary
+    attributes: { label: Summary, description: What and why }
+  - type: textarea
+    id: acceptance
+    attributes: { label: Acceptance Criteria, description: Given/When/Then }
+  - type: input
+    id: trace
+    attributes: { label: Traceability ID, description: Link to SRS item }

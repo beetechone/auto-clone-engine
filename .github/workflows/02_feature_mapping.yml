@@ -1,0 +1,26 @@
+name: 02 - Feature Mapping
+on:
+  workflow_dispatch: {}
+  push:
+    paths: ["infra/context/target_site.yaml"]
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Install Playwright
+        run: npm i -g playwright && npx playwright install --with-deps
+      - name: Crawl target
+        run: node infra/tools/crawler/scripts/crawl_site.mjs --config infra/tools/crawler/crawl.config.yaml
+      - name: Extract features
+        run: node infra/tools/crawler/scripts/extract_features.mjs infra/context/site_map.json > infra/context/backlog.json
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: discovery-artifacts
+          path: |
+            infra/context/site_map.json
+            infra/context/backlog.json
+            docs/01_feature_map.md

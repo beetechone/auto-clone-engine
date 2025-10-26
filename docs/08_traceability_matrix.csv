@@ -1,0 +1,10 @@
+SRS_ID,Title,Test_IDs,Status
+F-AUTH-001,Health Check,test_health,PASS
+F-AUTH-002,JWT Authentication,test_secure_ping_without_auth,PASS
+F-BILL-001,List Billing Plans,test_billing_plans|test_billing_plans_structure,PASS
+F-BILL-002,Checkout Session,test_billing_checkout_invalid_plan|test_billing_checkout_free_plan,PASS
+F-BILL-003,Stripe Webhook,test_stripe_webhook_without_signature,PASS
+F-WEB-001,Homepage Display,e2e:should load homepage and display title,PENDING
+F-WEB-002,Editor Placeholder,e2e:should display editor placeholder,PENDING
+F-WEB-003,Display Billing Plans,e2e:should fetch and display billing plans,PENDING
+F-QR-001,Create URL QR,TC-E2E-001|TC-API-001,FUTURE-P2
