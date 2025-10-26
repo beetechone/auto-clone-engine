@@ -1,4 +1,47 @@
 {
   "target": "https://qr-generator.ai/",
-  "pages": []
+  "pages": [
+    {
+      "path": "/",
+      "title": "QR Code Generator - Home",
+      "description": "Generate QR codes for URLs, text, Wi-Fi, and more",
+      "features": ["qr-editor", "preview", "export"]
+    },
+    {
+      "path": "/pricing",
+      "title": "Pricing - QR Generator",
+      "description": "View our pricing plans",
+      "features": ["billing-plans", "checkout"]
+    },
+    {
+      "path": "/editor",
+      "title": "QR Code Editor",
+      "description": "Create and customize QR codes",
+      "features": ["qr-editor", "preview", "export", "customization"]
+    },
+    {
+      "path": "/templates",
+      "title": "QR Code Templates",
+      "description": "Pre-configured QR code templates",
+      "features": ["template-gallery", "preview"]
+    },
+    {
+      "path": "/dashboard",
+      "title": "Dashboard - My QR Codes",
+      "description": "View and manage your saved QR codes",
+      "features": ["library", "analytics", "saved-qrs"]
+    },
+    {
+      "path": "/login",
+      "title": "Login - QR Generator",
+      "description": "Sign in to your account",
+      "features": ["auth", "login-form"]
+    },
+    {
+      "path": "/signup",
+      "title": "Sign Up - QR Generator",
+      "description": "Create a new account",
+      "features": ["auth", "signup-form"]
+    }
+  ]
 }
