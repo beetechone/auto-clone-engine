@@ -1,0 +1,3 @@
+- All MUST SRS items implemented and tested
+- CI: coverage >= 75%, Lighthouse >= 90, e2e pass
+- 3 consecutive green runs

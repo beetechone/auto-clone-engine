@@ -1,0 +1,15 @@
+name: Tech Spec
+labels: [spec]
+body:
+  - type: textarea
+    id: context
+    attributes: { label: Context }
+  - type: textarea
+    id: design
+    attributes: { label: Design }
+  - type: textarea
+    id: risks
+    attributes: { label: Risks }
+  - type: textarea
+    id: testplan
+    attributes: { label: Test Plan }

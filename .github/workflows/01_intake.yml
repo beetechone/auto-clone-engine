@@ -1,0 +1,26 @@
+name: 01 - Intake
+on:
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: "Website to functionally clone"
+        required: true
+  push:
+    paths: ["infra/context/target_site.yaml"]
+jobs:
+  set-target:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Ensure yq
+        run: sudo apt-get update && sudo apt-get install -y yq || true
+      - name: Write target URL into target_site.yaml (if from dispatch)
+        if: ${{ github.event.inputs.target_url }}
+        run: |
+          yq -i '.target_url = "${{ github.event.inputs.target_url }}"' infra/context/target_site.yaml || true
+      - name: Open tracking issue
+        uses: peter-evans/create-issue-from-file@v5
+        with:
+          title: "Discovery: ${{ github.event.inputs.target_url || 'target_site.yaml updated' }}"
+          content-file: docs/00_brief.md
+          labels: discovery,needs-input

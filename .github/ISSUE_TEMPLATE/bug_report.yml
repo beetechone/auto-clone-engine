@@ -1,0 +1,15 @@
+name: Bug report
+labels: [bug]
+body:
+  - type: textarea
+    id: steps
+    attributes: { label: Steps to Reproduce }
+  - type: textarea
+    id: expected
+    attributes: { label: Expected }
+  - type: textarea
+    id: actual
+    attributes: { label: Actual }
+  - type: textarea
+    id: artifacts
+    attributes: { label: Logs/Screenshots }

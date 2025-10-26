@@ -1,0 +1,11 @@
+project: qr-generator-clone
+status: discovery
+phase: 0
+quality_gates:
+  coverage_min: 0.75
+  lighthouse_min: 90
+  e2e_required: true
+stakeholders:
+  product_owner: "@your-handle"
+  tech_lead: "@agent"
+notes: []

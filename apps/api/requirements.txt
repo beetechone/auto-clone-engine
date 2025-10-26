@@ -1,0 +1,8 @@
+fastapi==0.115.4
+uvicorn[standard]==0.32.0
+pydantic[dotenv]==2.8.2
+python-jose[cryptography]==3.3.0
+httpx==0.27.2
+stripe==10.12.0
+structlog==24.1.0
+loguru==0.7.2

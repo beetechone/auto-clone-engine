@@ -1,0 +1,5 @@
+/apps/web/      @frontend-lead
+/apps/api/      @backend-lead
+/apps/admin/    @frontend-lead @product
+/docs/          @ba-lead
+/infra/         @devops

@@ -1,0 +1,2 @@
+- robots.txt respect
+- Third-party IP — no copying content/assets/code

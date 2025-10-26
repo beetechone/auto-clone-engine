@@ -1,0 +1,66 @@
+version: "3.9"
+services:
+  api:
+    build: { context: ./apps/api, dockerfile: Dockerfile }
+    container_name: cloner_api
+    env_file: [ .env.local ]
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/qrdb
+      - REDIS_URL=redis://redis:6379/0
+      - S3_ENDPOINT=http://minio:9000
+      - S3_BUCKET=assets
+      - S3_ACCESS_KEY=minioadmin
+      - S3_SECRET_KEY=minioadmin
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+      - AUTH0_DOMAIN=${AUTH0_DOMAIN}
+      - AUTH0_AUDIENCE=${AUTH0_AUDIENCE}
+      - AUTH0_ALG=${AUTH0_ALG}
+    ports: [ "8000:8000" ]
+    depends_on: [ db, redis, minio ]
+
+  web:
+    build: { context: ./apps/web, dockerfile: Dockerfile }
+    container_name: cloner_web
+    env_file: [ .env.local ]
+    environment:
+      - NEXT_PUBLIC_API_BASE=http://api:8000
+    ports: [ "3000:3000" ]
+    depends_on: [ api ]
+
+  admin:
+    build: { context: ./apps/admin, dockerfile: Dockerfile }
+    container_name: cloner_admin
+    env_file: [ .env.local ]
+    environment:
+      - NEXT_PUBLIC_API_BASE=http://api:8000
+    ports: [ "3001:3000" ]
+    depends_on: [ api ]
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=qrdb
+    ports: [ "5432:5432" ]
+    volumes: [ "db_data:/var/lib/postgresql/data" ]
+
+  redis:
+    image: redis:7-alpine
+    ports: [ "6379:6379" ]
+
+  minio:
+    image: minio/minio:RELEASE.2024-10-02T17-50-41Z
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    command: server /data --console-address ":9001"
+    ports: [ "9000:9000", "9001:9001" ]
+    volumes: [ "minio_data:/data" ]
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    ports: [ "1025:1025", "8025:8025" ]
+
+volumes: { db_data: {}, minio_data: {} }
