@@ -22,8 +22,7 @@ class TagSchema(BaseModel):
     color: str
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 class FolderSchema(BaseModel):
@@ -33,8 +32,7 @@ class FolderSchema(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 class QRItemSchema(BaseModel):
@@ -49,8 +47,7 @@ class QRItemSchema(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
 
 
 class QRItemCreate(BaseModel):
@@ -142,8 +139,8 @@ def log_audit(db: Session, user_id: UUID, action: str, resource_type: str, resou
 def list_qr_items(
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
-    sort_by: str = Query("created_at", regex="^(name|created_at|updated_at|type)$"),
-    sort_order: str = Query("desc", regex="^(asc|desc)$"),
+    sort_by: str = Query("created_at", pattern="^(name|created_at|updated_at|type)$"),
+    sort_order: str = Query("desc", pattern="^(asc|desc)$"),
     folder_id: Optional[UUID] = None,
     tag_id: Optional[UUID] = None,
     search: Optional[str] = None,

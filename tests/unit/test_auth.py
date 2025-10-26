@@ -9,4 +9,4 @@ def test_health():
 def test_app_metadata():
   """Test app metadata is properly configured"""
   assert app.title == "QR Cloner API"
-  assert app.version == "0.2.0"
+  assert app.version == "0.3.0"
