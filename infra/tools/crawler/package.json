@@ -1,0 +1,14 @@
+{
+  "name": "@cloner/crawler",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Headless crawler & feature extractor for SaaS Feature Cloner",
+  "license": "MIT",
+  "dependencies": {
+    "js-yaml": "^4.1.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
