@@ -1,7 +1,7 @@
 target_url: https://qr-generator.ai/
 robots_respect: true
-crawl_depth: 2
-include_paths: ["/", "/pricing", "/templates", "/dashboard"]
+crawl_depth: 3
+include_paths: ["/", "/pricing", "/templates", "/dashboard", "/login", "/signup", "/editor", "/qr", "/export", "/library", "/analytics", "/account", "/settings"]
 exclude_patterns: ["/blog", "/legal"]
 render_js: true
 snapshot_media: false

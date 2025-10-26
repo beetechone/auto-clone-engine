@@ -1,0 +1,93 @@
+[
+  {
+    "id": "ROUTE-001",
+    "route": "/",
+    "title": "Home Page - QR Editor",
+    "phase": 2,
+    "status": "implemented",
+    "acceptance_criteria": {
+      "structure_parity": "Main heading, QR editor section, billing plans display",
+      "functional_parity": "Display QR editor placeholder, fetch and show billing plans from API",
+      "seo_a11y": "Proper page title, semantic HTML, accessible form elements"
+    },
+    "tests": ["home page loads", "displays title", "editor section visible", "billing plans fetched"]
+  },
+  {
+    "id": "ROUTE-002",
+    "route": "/pricing",
+    "title": "Pricing Page",
+    "phase": 2,
+    "status": "pending",
+    "acceptance_criteria": {
+      "structure_parity": "Pricing header, plan cards with features, CTA buttons",
+      "functional_parity": "Display all billing plans, link to /billing/checkout for paid plans",
+      "seo_a11y": "Page title 'Pricing', semantic headings, accessible navigation"
+    },
+    "tests": ["pricing page loads", "displays all plans", "checkout links work", "status code 200"]
+  },
+  {
+    "id": "ROUTE-003",
+    "route": "/editor",
+    "title": "QR Editor Page",
+    "phase": 2,
+    "status": "pending",
+    "acceptance_criteria": {
+      "structure_parity": "Editor form, preview panel, export controls",
+      "functional_parity": "Call /qr endpoint (stub ok), display live preview placeholder, export buttons",
+      "seo_a11y": "Page title 'QR Editor', labeled form fields, keyboard accessible"
+    },
+    "tests": ["editor page loads", "preview visible", "export buttons present", "API stub called"]
+  },
+  {
+    "id": "ROUTE-004",
+    "route": "/templates",
+    "title": "Templates Gallery Page",
+    "phase": 2,
+    "status": "pending",
+    "acceptance_criteria": {
+      "structure_parity": "Gallery grid, template previews, filter/search",
+      "functional_parity": "Display template cards, click to use template in editor",
+      "seo_a11y": "Page title 'Templates', image alt text, grid navigation"
+    },
+    "tests": ["templates page loads", "displays template grid", "navigation works", "status code 200"]
+  },
+  {
+    "id": "ROUTE-005",
+    "route": "/dashboard",
+    "title": "User Dashboard Page",
+    "phase": 2,
+    "status": "pending",
+    "acceptance_criteria": {
+      "structure_parity": "Dashboard header, saved QR codes list, action buttons",
+      "functional_parity": "Display saved QR codes placeholder, link to create new",
+      "seo_a11y": "Page title 'Dashboard', semantic lists, accessible buttons"
+    },
+    "tests": ["dashboard page loads", "shows saved items placeholder", "create button present", "status code 200"]
+  },
+  {
+    "id": "ROUTE-006",
+    "route": "/login",
+    "title": "Login Page",
+    "phase": 2,
+    "status": "pending",
+    "acceptance_criteria": {
+      "structure_parity": "Login form, email/password fields, submit button",
+      "functional_parity": "Auth form placeholder, link to signup",
+      "seo_a11y": "Page title 'Login', labeled inputs, form validation"
+    },
+    "tests": ["login page loads", "form visible", "signup link present", "status code 200"]
+  },
+  {
+    "id": "ROUTE-007",
+    "route": "/signup",
+    "title": "Sign Up Page",
+    "phase": 2,
+    "status": "pending",
+    "acceptance_criteria": {
+      "structure_parity": "Signup form, name/email/password fields, submit button",
+      "functional_parity": "Registration form placeholder, link to login",
+      "seo_a11y": "Page title 'Sign Up', labeled inputs, password requirements"
+    },
+    "tests": ["signup page loads", "form visible", "login link present", "status code 200"]
+  }
+]
