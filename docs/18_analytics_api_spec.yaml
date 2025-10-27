@@ -1,0 +1,402 @@
+openapi: 3.0.0
+info:
+  title: QR Cloner Analytics API
+  version: 0.4.0
+  description: |
+    Analytics and event tracking endpoints for QR code management system.
+    
+    Features:
+    - Event tracking (create, export, scan)
+    - Analytics summary and time series data
+    - Shortlink redirects with scan tracking
+    - Rate limiting and caching
+
+servers:
+  - url: http://localhost:8000
+    description: Local development server
+  - url: https://api.qr-cloner.com
+    description: Production server
+
+tags:
+  - name: Redirects
+    description: Public shortlink redirects
+  - name: Analytics
+    description: Analytics and reporting endpoints (authenticated)
+
+paths:
+  /r/{code}:
+    get:
+      tags:
+        - Redirects
+      summary: Redirect shortlink
+      description: |
+        Redirect to the target URL associated with the shortlink code.
+        Records a scan event for analytics tracking.
+        
+        **Rate Limit:** 200 requests/minute per IP
+      operationId: redirectShortlink
+      parameters:
+        - name: code
+          in: path
+          required: true
+          description: Shortlink code (e.g., "abc123")
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 20
+      responses:
+        '302':
+          description: Successful redirect
+          headers:
+            Location:
+              description: Target URL to redirect to
+              schema:
+                type: string
+                format: uri
+            X-RateLimit-Limit:
+              description: Rate limit maximum requests
+              schema:
+                type: integer
+            X-RateLimit-Remaining:
+              description: Rate limit remaining requests
+              schema:
+                type: integer
+            X-RateLimit-Reset:
+              description: Rate limit reset timestamp
+              schema:
+                type: integer
+        '404':
+          description: Shortlink not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  detail:
+                    type: string
+                    example: "Shortlink not found"
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+
+  /analytics/summary:
+    get:
+      tags:
+        - Analytics
+      summary: Get analytics summary
+      description: |
+        Get summary analytics for the current user's QR codes.
+        Includes totals, weekly, and monthly statistics.
+        
+        **Rate Limit:** 60 requests/minute per user
+        **Cache TTL:** 5 minutes
+      operationId: getAnalyticsSummary
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Analytics summary retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsSummary'
+        '401':
+          description: Unauthorized - invalid or missing authentication
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+
+  /analytics/timeseries:
+    get:
+      tags:
+        - Analytics
+      summary: Get time series analytics
+      description: |
+        Get time series data for charts and visualizations.
+        Supports daily and weekly aggregation.
+        
+        **Rate Limit:** 60 requests/minute per user
+        **Cache TTL:** 5 minutes
+      operationId: getAnalyticsTimeSeries
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: period
+          in: query
+          description: Aggregation period
+          required: false
+          schema:
+            type: string
+            enum: [daily, weekly]
+            default: daily
+        - name: days
+          in: query
+          description: Number of days to retrieve (1-365)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 365
+            default: 30
+      responses:
+        '200':
+          description: Time series data retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeSeriesResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+
+  /analytics/events:
+    get:
+      tags:
+        - Analytics
+      summary: Get detailed event list
+      description: |
+        Get a paginated list of events for the current user.
+        Events include create, export, and scan activities.
+        
+        **Rate Limit:** 60 requests/minute per user
+      operationId: getAnalyticsEvents
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: event_type
+          in: query
+          description: Filter by event type
+          required: false
+          schema:
+            type: string
+            enum: [create, export, scan]
+        - name: limit
+          in: query
+          description: Number of results per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 100
+        - name: offset
+          in: query
+          description: Pagination offset
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: Events retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Event'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationError'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RateLimitError'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token from Auth0
+
+  schemas:
+    AnalyticsSummary:
+      type: object
+      properties:
+        total_creates:
+          type: integer
+          description: Total QR codes created (all time)
+          example: 100
+        total_exports:
+          type: integer
+          description: Total exports (all time)
+          example: 50
+        total_scans:
+          type: integer
+          description: Total scans (all time)
+          example: 200
+        creates_this_week:
+          type: integer
+          description: QR codes created in the last 7 days
+          example: 10
+        exports_this_week:
+          type: integer
+          description: Exports in the last 7 days
+          example: 5
+        scans_this_week:
+          type: integer
+          description: Scans in the last 7 days
+          example: 20
+        creates_this_month:
+          type: integer
+          description: QR codes created in the last 30 days
+          example: 30
+        exports_this_month:
+          type: integer
+          description: Exports in the last 30 days
+          example: 15
+        scans_this_month:
+          type: integer
+          description: Scans in the last 30 days
+          example: 60
+
+    TimeSeriesPoint:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+          description: Date for this data point
+          example: "2025-10-27"
+        creates:
+          type: integer
+          description: Number of QR codes created on this date
+          example: 5
+        exports:
+          type: integer
+          description: Number of exports on this date
+          example: 3
+        scans:
+          type: integer
+          description: Number of scans on this date
+          example: 10
+
+    TimeSeriesResponse:
+      type: object
+      properties:
+        period:
+          type: string
+          enum: [daily, weekly]
+          description: Aggregation period used
+          example: daily
+        data:
+          type: array
+          description: Time series data points
+          items:
+            $ref: '#/components/schemas/TimeSeriesPoint'
+
+    Event:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Event ID
+        type:
+          type: string
+          enum: [create, export, scan]
+          description: Event type
+          example: scan
+        user_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: User ID (null for anonymous scans)
+        item_id:
+          type: string
+          format: uuid
+          nullable: true
+          description: QR item ID
+        meta:
+          type: object
+          description: Event metadata (varies by type)
+          example: {"code": "abc123", "target_url": "https://example.com"}
+        created_at:
+          type: string
+          format: date-time
+          description: Event timestamp
+          example: "2025-10-27T12:00:00Z"
+
+    Error:
+      type: object
+      properties:
+        detail:
+          type: string
+          description: Error message
+          example: "Authentication required"
+
+    ValidationError:
+      type: object
+      properties:
+        detail:
+          type: array
+          items:
+            type: object
+            properties:
+              loc:
+                type: array
+                items:
+                  type: string
+                description: Error location
+              msg:
+                type: string
+                description: Error message
+              type:
+                type: string
+                description: Error type
+
+    RateLimitError:
+      type: object
+      properties:
+        detail:
+          type: object
+          properties:
+            error:
+              type: string
+              example: "rate_limit_exceeded"
+            message:
+              type: string
+              example: "Rate limit exceeded. Maximum 60 requests per 60 seconds."
+            retry_after:
+              type: integer
+              description: Seconds to wait before retrying
+              example: 60
