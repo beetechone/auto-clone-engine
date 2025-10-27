@@ -1,0 +1,18 @@
+# Robots.txt for QR Clone Engine
+# Generated for Phase 7 (P7) - SEO Compliance
+
+User-agent: *
+Allow: /
+Allow: /pricing
+Allow: /editor
+Allow: /templates
+Allow: /login
+Allow: /signup
+
+# Disallow admin and protected routes
+Disallow: /dashboard
+Disallow: /admin
+Disallow: /api
+
+# Sitemap location
+Sitemap: http://localhost:3000/sitemap.xml
