@@ -6,7 +6,9 @@ from .auth import require_auth
 from . import billing
 from . import library
 from . import templates
+from . import analytics
 from .database import init_db
+from .rate_limit import RateLimitMiddleware
 
 logger = setup_logging()
 
@@ -27,8 +29,13 @@ async def lifespan(app: FastAPI):
     pass
 
 
-app = FastAPI(title="QR Cloner API", version="0.3.0", lifespan=lifespan)
+app = FastAPI(title="QR Cloner API", version="0.4.0", lifespan=lifespan)
+
+# Add CORS middleware
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+
+# Add rate limiting middleware
+app.add_middleware(RateLimitMiddleware, default_limit=100, default_window=60)
 
 @app.get("/health")
 def health():
@@ -43,3 +50,4 @@ app.include_router(billing.router)
 app.include_router(library.router)
 app.include_router(templates.public_router)
 app.include_router(templates.admin_router)
+app.include_router(analytics.router)

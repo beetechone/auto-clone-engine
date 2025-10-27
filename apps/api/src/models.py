@@ -279,3 +279,51 @@ class BillingEvent(Base):
 
     # Relationships
     account = relationship("Account", back_populates="billing_events")
+
+
+class QREvent(Base):
+    """Event tracking for QR codes (create, export, scan)."""
+    __tablename__ = "qr_events"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    type = Column(String, nullable=False)  # create, export, scan
+    user_id = Column(UUID(as_uuid=True), ForeignKey("accounts.id", ondelete="SET NULL"), nullable=True)
+    item_id = Column(UUID(as_uuid=True), ForeignKey("qr_items.id", ondelete="SET NULL"), nullable=True)
+    
+    # Event metadata
+    meta = Column(JSONB, default={})  # Format, location, user agent, etc.
+    ip_address = Column(String, nullable=True)
+    user_agent = Column(Text, nullable=True)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Constraints
+    __table_args__ = (
+        CheckConstraint("type IN ('create', 'export', 'scan')", name="qr_event_type_check"),
+        Index("idx_qr_events_type", "type", "created_at"),
+        Index("idx_qr_events_user", "user_id", "created_at"),
+        Index("idx_qr_events_item", "item_id", "created_at"),
+    )
+
+
+class Shortlink(Base):
+    """Shortlink redirect tracking for QR codes."""
+    __tablename__ = "shortlinks"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    code = Column(String(20), unique=True, nullable=False)  # Short code (e.g., "abc123")
+    qr_item_id = Column(UUID(as_uuid=True), ForeignKey("qr_items.id", ondelete="CASCADE"), nullable=False)
+    target_url = Column(Text, nullable=False)  # Original URL to redirect to
+    
+    # Tracking
+    scan_count = Column(Integer, default=0, nullable=False)
+    last_scanned_at = Column(DateTime(timezone=True), nullable=True)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    # Constraints
+    __table_args__ = (
+        Index("idx_shortlinks_code", "code"),
+        Index("idx_shortlinks_qr_item", "qr_item_id"),
+    )

@@ -1,7 +1,8 @@
-"""Redis cache utilities for template gallery."""
+"""Redis cache utilities for template gallery and analytics."""
 import os
+import json
 import redis
-from typing import Optional
+from typing import Optional, Any
 from .logging_config import setup_logging
 
 logger = setup_logging()
@@ -28,27 +29,40 @@ def get_redis_client():
     return _redis_client
 
 
-def get_cache(key: str) -> Optional[str]:
-    """Get value from cache."""
+def get_cache(key: str) -> Optional[Any]:
+    """Get value from cache. Automatically deserializes JSON."""
     client = get_redis_client()
     if not client:
         return None
     
     try:
         value = client.get(key)
-        return value
+        if value:
+            try:
+                # Try to parse as JSON
+                return json.loads(value)
+            except (json.JSONDecodeError, TypeError):
+                # Return as string if not JSON
+                return value
+        return None
     except Exception as e:
         logger.warning({"event": "cache_get_error", "key": key, "error": str(e)})
         return None
 
 
-def set_cache(key: str, value: str, ttl: int = 300) -> bool:
-    """Set value in cache with TTL in seconds."""
+def set_cache(key: str, value: Any, ttl: int = 300) -> bool:
+    """Set value in cache with TTL in seconds. Automatically serializes dicts/lists to JSON."""
     client = get_redis_client()
     if not client:
         return False
     
     try:
+        # Serialize dicts/lists to JSON
+        if isinstance(value, (dict, list)):
+            value = json.dumps(value)
+        elif not isinstance(value, str):
+            value = str(value)
+        
         client.setex(key, ttl, value)
         return True
     except Exception as e:
