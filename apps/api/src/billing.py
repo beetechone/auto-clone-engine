@@ -373,7 +373,8 @@ async def stripe_webhook(request: Request, db: Session = Depends(get_db)):
         db.add(billing_event)
         db.commit()
         
-        return JSONResponse(status_code=500, content={"ok": False, "error": str(e)})
+        # Return generic error without exposing internal details
+        return JSONResponse(status_code=500, content={"ok": False, "error": "Webhook processing error"})
 
 
 async def handle_checkout_completed(db: Session, session_data: dict):
