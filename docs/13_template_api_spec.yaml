@@ -1,0 +1,544 @@
+openapi: 3.0.3
+info:
+  title: QR Generator Template API
+  version: 0.4.0
+  description: Template management API for Phase 4
+
+servers:
+  - url: http://localhost:8000
+    description: Local development
+
+paths:
+  # Public Template Endpoints
+  /templates:
+    get:
+      summary: List published templates
+      description: Get paginated list of published templates with optional filtering
+      tags:
+        - Templates (Public)
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: sort_by
+          in: query
+          schema:
+            type: string
+            enum: [name, created_at, updated_at]
+            default: created_at
+        - name: sort_order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+        - name: category_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: tag
+          in: query
+          schema:
+            type: string
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  templates:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Template'
+                  total:
+                    type: integer
+                  page:
+                    type: integer
+                  per_page:
+                    type: integer
+
+  /templates/categories:
+    get:
+      summary: List template categories
+      tags:
+        - Templates (Public)
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  categories:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/TemplateCategory'
+
+  /templates/{template_id}:
+    get:
+      summary: Get template by ID
+      description: Get a published template by its ID
+      tags:
+        - Templates (Public)
+      parameters:
+        - name: template_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Template'
+        '404':
+          description: Template not found
+
+  # Admin Template Endpoints
+  /admin/templates:
+    get:
+      summary: List all templates (admin)
+      description: Get all templates including unpublished (requires admin role)
+      tags:
+        - Templates (Admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: sort_by
+          in: query
+          schema:
+            type: string
+            enum: [name, created_at, updated_at]
+        - name: sort_order
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+        - name: category_id
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: is_published
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Success
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden (admin access required)
+
+    post:
+      summary: Create template (admin)
+      tags:
+        - Templates (Admin)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Template'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  /admin/templates/{template_id}:
+    get:
+      summary: Get template (admin)
+      tags:
+        - Templates (Admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: template_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Success
+        '404':
+          description: Not found
+
+    put:
+      summary: Update template (admin)
+      tags:
+        - Templates (Admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: template_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateUpdate'
+      responses:
+        '200':
+          description: Success
+        '404':
+          description: Not found
+
+    delete:
+      summary: Delete template (admin)
+      tags:
+        - Templates (Admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: template_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Deleted
+        '404':
+          description: Not found
+
+  /admin/templates/{template_id}/publish:
+    post:
+      summary: Publish template (admin)
+      tags:
+        - Templates (Admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: template_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Published
+        '404':
+          description: Not found
+
+  /admin/templates/{template_id}/unpublish:
+    post:
+      summary: Unpublish template (admin)
+      tags:
+        - Templates (Admin)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: template_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Unpublished
+        '404':
+          description: Not found
+
+  /admin/templates/upload:
+    post:
+      summary: Upload asset (admin)
+      description: Upload image/logo asset for template to S3/MinIO
+      tags:
+        - Templates (Admin)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+                - template_id
+                - asset_type
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Image file (PNG, JPEG, GIF, SVG, WebP)
+                template_id:
+                  type: string
+                  format: uuid
+                asset_type:
+                  type: string
+                  enum: [logo, image, icon]
+      responses:
+        '201':
+          description: Uploaded
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  s3_url:
+                    type: string
+                  file_name:
+                    type: string
+        '400':
+          description: Invalid file or validation error
+        '404':
+          description: Template not found
+
+  /admin/templates/categories:
+    post:
+      summary: Create category (admin)
+      tags:
+        - Templates (Admin)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryCreate'
+      responses:
+        '201':
+          description: Created
+        '400':
+          description: Duplicate name or slug
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    TemplateCategory:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+
+    TemplateAsset:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        asset_type:
+          type: string
+          enum: [logo, image, icon]
+        file_name:
+          type: string
+        file_size:
+          type: string
+        mime_type:
+          type: string
+        s3_url:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+
+    Template:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        category_id:
+          type: string
+          format: uuid
+          nullable: true
+        category:
+          $ref: '#/components/schemas/TemplateCategory'
+          nullable: true
+        type:
+          type: string
+          enum: [url, text, wifi, vcard, event]
+        payload_template:
+          type: object
+        options_template:
+          type: object
+        variables:
+          type: object
+        tags:
+          type: array
+          items:
+            type: string
+        preview_url:
+          type: string
+          nullable: true
+        is_published:
+          type: boolean
+        assets:
+          type: array
+          items:
+            $ref: '#/components/schemas/TemplateAsset'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    TemplateCreate:
+      type: object
+      required:
+        - name
+        - type
+        - payload_template
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          nullable: true
+        category_id:
+          type: string
+          format: uuid
+          nullable: true
+        type:
+          type: string
+          enum: [url, text, wifi, vcard, event]
+        payload_template:
+          type: object
+        options_template:
+          type: object
+          default: {}
+        variables:
+          type: object
+          default: {}
+        tags:
+          type: array
+          items:
+            type: string
+          default: []
+        preview_url:
+          type: string
+          nullable: true
+        is_published:
+          type: boolean
+          default: false
+
+    TemplateUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          nullable: true
+        category_id:
+          type: string
+          format: uuid
+          nullable: true
+        payload_template:
+          type: object
+        options_template:
+          type: object
+        variables:
+          type: object
+        tags:
+          type: array
+          items:
+            type: string
+        preview_url:
+          type: string
+          nullable: true
+        is_published:
+          type: boolean
+
+    CategoryCreate:
+      type: object
+      required:
+        - name
+        - slug
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        slug:
+          type: string
+          minLength: 1
+          maxLength: 100
+          pattern: '^[a-z0-9-]+$'
+        description:
+          type: string
+          nullable: true

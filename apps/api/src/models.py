@@ -123,3 +123,78 @@ class AuditLog(Base):
     __table_args__ = (
         Index("idx_audit_log_user", "user_id", "created_at"),
     )
+
+
+class TemplateCategory(Base):
+    """Template category for organizing templates."""
+    __tablename__ = "template_categories"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String(100), unique=True, nullable=False)
+    slug = Column(String(100), unique=True, nullable=False)
+    description = Column(Text, nullable=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    templates = relationship("Template", back_populates="category")
+
+
+class Template(Base):
+    """QR code template with customizable variables."""
+    __tablename__ = "templates"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String(255), nullable=False)
+    description = Column(Text, nullable=True)
+    category_id = Column(UUID(as_uuid=True), ForeignKey("template_categories.id", ondelete="SET NULL"), nullable=True)
+    
+    # Template configuration
+    type = Column(String, nullable=False)  # url, text, wifi, vcard, event
+    payload_template = Column(JSONB, nullable=False)  # Template with variables
+    options_template = Column(JSONB, nullable=False, default={})  # Style options template
+    variables = Column(JSONB, nullable=False, default={})  # Variable definitions (color, logo, etc.)
+    
+    # Metadata
+    tags = Column(JSONB, default=[])  # Array of tag strings
+    preview_url = Column(String, nullable=True)  # URL to preview image
+    is_published = Column(Boolean, default=False, nullable=False)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    # Constraints
+    __table_args__ = (
+        CheckConstraint("type IN ('url', 'text', 'wifi', 'vcard', 'event')", name="template_type_check"),
+        Index("idx_templates_category", "category_id"),
+        Index("idx_templates_published", "is_published"),
+    )
+
+    # Relationships
+    category = relationship("TemplateCategory", back_populates="templates")
+    assets = relationship("TemplateAsset", back_populates="template", cascade="all, delete-orphan")
+
+
+class TemplateAsset(Base):
+    """Assets associated with templates (logos, images, etc.)."""
+    __tablename__ = "template_assets"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    template_id = Column(UUID(as_uuid=True), ForeignKey("templates.id", ondelete="CASCADE"), nullable=False)
+    
+    # Asset details
+    asset_type = Column(String, nullable=False)  # logo, image, icon
+    file_name = Column(String(255), nullable=False)
+    file_size = Column(String, nullable=False)  # in bytes as string
+    mime_type = Column(String(100), nullable=False)
+    s3_key = Column(String(500), nullable=False)  # S3/MinIO object key
+    s3_url = Column(String(1000), nullable=False)  # Public URL
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Constraints
+    __table_args__ = (
+        Index("idx_template_assets_template", "template_id"),
+    )
+
+    # Relationships
+    template = relationship("Template", back_populates="assets")
