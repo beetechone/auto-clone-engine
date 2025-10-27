@@ -5,6 +5,7 @@ from .logging_config import setup_logging
 from .auth import require_auth
 from . import billing
 from . import library
+from . import templates
 from .database import init_db
 
 logger = setup_logging()
@@ -40,3 +41,5 @@ def secure_ping(user=Depends(require_auth)):
 
 app.include_router(billing.router)
 app.include_router(library.router)
+app.include_router(templates.public_router)
+app.include_router(templates.admin_router)
