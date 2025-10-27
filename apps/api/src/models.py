@@ -1,7 +1,7 @@
 """SQLAlchemy models for QR items, folders, tags, and audit log."""
 import uuid
 from datetime import datetime
-from sqlalchemy import Column, String, ForeignKey, DateTime, Text, CheckConstraint, UniqueConstraint, Index, Boolean
+from sqlalchemy import Column, String, ForeignKey, DateTime, Text, CheckConstraint, UniqueConstraint, Index, Boolean, Integer
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -9,20 +9,39 @@ from .database import Base
 
 
 class Account(Base):
-    """User account model."""
+    """User account model with billing integration."""
     __tablename__ = "accounts"
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     email = Column(String, unique=True, nullable=False)
     auth_sub = Column(String, unique=True, nullable=False)  # Auth0 subject ID
     plan = Column(String, default="free")
+    
+    # Stripe integration
+    stripe_customer_id = Column(String, unique=True, nullable=True)
+    stripe_subscription_id = Column(String, unique=True, nullable=True)
+    subscription_status = Column(String, default="free")  # free, trial, active, past_due, canceled, paused
+    subscription_current_period_end = Column(DateTime(timezone=True), nullable=True)
+    
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    # Constraints
+    __table_args__ = (
+        CheckConstraint(
+            "subscription_status IN ('free', 'trial', 'active', 'past_due', 'canceled', 'paused')", 
+            name="account_subscription_status_check"
+        ),
+        Index("idx_accounts_stripe_customer", "stripe_customer_id"),
+        Index("idx_accounts_stripe_subscription", "stripe_subscription_id"),
+    )
 
     # Relationships
     qr_items = relationship("QRItem", back_populates="owner", cascade="all, delete-orphan")
     folders = relationship("Folder", back_populates="owner", cascade="all, delete-orphan")
     tags = relationship("Tag", back_populates="owner", cascade="all, delete-orphan")
+    usage_quotas = relationship("UsageQuota", back_populates="account", cascade="all, delete-orphan")
+    billing_events = relationship("BillingEvent", back_populates="account", cascade="all, delete-orphan")
 
 
 class QRItem(Base):
@@ -198,3 +217,65 @@ class TemplateAsset(Base):
 
     # Relationships
     template = relationship("Template", back_populates="assets")
+
+
+class UsageQuota(Base):
+    """Track usage quotas and limits per account."""
+    __tablename__ = "usage_quotas"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    account_id = Column(UUID(as_uuid=True), ForeignKey("accounts.id", ondelete="CASCADE"), nullable=False)
+    
+    # Time period tracking
+    period_start = Column(DateTime(timezone=True), nullable=False)
+    period_end = Column(DateTime(timezone=True), nullable=False)
+    
+    # Usage counters
+    qr_generated_count = Column(Integer, default=0, nullable=False)
+    exports_count = Column(Integer, default=0, nullable=False)
+    templates_applied_count = Column(Integer, default=0, nullable=False)
+    
+    # Daily counters (reset daily)
+    daily_exports = Column(Integer, default=0, nullable=False)
+    daily_reset_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    # Constraints
+    __table_args__ = (
+        Index("idx_usage_quotas_account", "account_id"),
+        Index("idx_usage_quotas_period", "account_id", "period_start", "period_end"),
+    )
+
+    # Relationships
+    account = relationship("Account", back_populates="usage_quotas")
+
+
+class BillingEvent(Base):
+    """Audit log for billing events from Stripe webhooks."""
+    __tablename__ = "billing_events"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    account_id = Column(UUID(as_uuid=True), ForeignKey("accounts.id", ondelete="SET NULL"), nullable=True)
+    
+    # Stripe event details
+    stripe_event_id = Column(String, unique=True, nullable=False)
+    event_type = Column(String, nullable=False)
+    event_data = Column(JSONB, nullable=False)
+    
+    # Processing status
+    processed = Column(Boolean, default=False, nullable=False)
+    error_message = Column(Text, nullable=True)
+    
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Constraints
+    __table_args__ = (
+        Index("idx_billing_events_account", "account_id"),
+        Index("idx_billing_events_stripe_id", "stripe_event_id"),
+        Index("idx_billing_events_type", "event_type", "created_at"),
+    )
+
+    # Relationships
+    account = relationship("Account", back_populates="billing_events")
