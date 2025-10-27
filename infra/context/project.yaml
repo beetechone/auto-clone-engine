@@ -1,6 +1,6 @@
 project: qr-generator-clone
 status: phase-2-complete
-phase: 5
+phase: 6
 quality_gates:
   coverage_min: 0.75
   lighthouse_min: 90
