@@ -48,3 +48,21 @@ async def require_auth(credentials: HTTPAuthorizationCredentials = Depends(secur
     except Exception as e:
         logger.error({"event":"auth_error","error":str(e)})
         raise HTTPException(status_code=401, detail="Invalid token")
+
+
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Get current authenticated user from JWT token."""
+    return await require_auth(credentials)
+
+
+def is_admin(user: dict) -> bool:
+    """Check if user has admin role."""
+    roles = user.get("https://qr-cloner.local/roles", [])
+    return "admin" in roles
+
+
+async def require_admin(user: dict = Depends(get_current_user)):
+    """Require admin role for endpoint access."""
+    if not is_admin(user):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return user

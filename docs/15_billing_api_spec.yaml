@@ -1,0 +1,399 @@
+openapi: 3.0.3
+info:
+  title: QR Cloner - Billing & Subscription API
+  version: 2.0.0
+  description: |
+    Complete billing and subscription management API with Stripe integration.
+    Includes quota enforcement, webhook handling, and customer portal access.
+
+servers:
+  - url: http://localhost:8000
+    description: Local development
+  - url: https://api.qr-cloner.com
+    description: Production
+
+tags:
+  - name: Billing
+    description: Subscription and billing operations
+  - name: Webhooks
+    description: Stripe webhook handlers
+
+paths:
+  /billing/plans:
+    get:
+      summary: List all subscription plans
+      description: Get available subscription plans with pricing, quotas, and features
+      tags:
+        - Billing
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  plans:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Plan'
+              example:
+                plans:
+                  - id: free
+                    name: Free
+                    price: 0
+                    currency: usd
+                    quota:
+                      qr_month: 50
+                      exports_day: 10
+                      templates_apply: 5
+                    features:
+                      - 50 QR codes per month
+                      - 10 exports per day
+                      - Basic templates
+                  - id: pro
+                    name: Pro
+                    price: 990
+                    currency: usd
+                    interval: month
+                    quota:
+                      qr_month: 1000
+                      exports_day: 100
+                      templates_apply: 100
+                    features:
+                      - 1,000 QR codes per month
+                      - 100 exports per day
+                      - All templates
+                      - Priority support
+
+  /billing/checkout:
+    post:
+      summary: Create checkout session
+      description: Create a Stripe checkout session for plan subscription
+      tags:
+        - Billing
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - plan_id
+              properties:
+                plan_id:
+                  type: string
+                  enum: [free, pro, team]
+                  description: Plan to subscribe to
+                success_url:
+                  type: string
+                  format: uri
+                  description: URL to redirect on successful checkout
+                  default: http://localhost:3000/success
+                cancel_url:
+                  type: string
+                  format: uri
+                  description: URL to redirect on canceled checkout
+                  default: http://localhost:3000/cancel
+            example:
+              plan_id: pro
+              success_url: https://app.example.com/success
+              cancel_url: https://app.example.com/pricing
+      responses:
+        '200':
+          description: Checkout session created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: Checkout session ID
+                  url:
+                    type: string
+                    format: uri
+                    description: Stripe checkout URL
+              example:
+                id: cs_test_123abc
+                url: https://checkout.stripe.com/pay/cs_test_123abc
+        '400':
+          description: Invalid plan ID
+        '401':
+          description: Authentication required
+        '500':
+          description: Stripe error
+
+  /billing/subscription:
+    get:
+      summary: Get subscription status
+      description: Get current user's subscription status and usage
+      tags:
+        - Billing
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Subscription details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Subscription'
+              example:
+                plan: pro
+                status: active
+                current_period_end: '2025-11-27T05:44:36.997Z'
+                quota_limits:
+                  qr_month: 1000
+                  exports_day: 100
+                  templates_apply: 100
+                usage:
+                  qr_generated: 45
+                  exports_today: 12
+                  templates_applied: 8
+        '401':
+          description: Authentication required
+        '404':
+          description: Account not found
+
+  /billing/portal:
+    post:
+      summary: Create customer portal session
+      description: Create a Stripe customer portal session for subscription management
+      tags:
+        - Billing
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                return_url:
+                  type: string
+                  format: uri
+                  description: URL to return after portal session
+                  default: http://localhost:3000/dashboard
+            example:
+              return_url: https://app.example.com/dashboard
+      responses:
+        '200':
+          description: Portal session created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    format: uri
+                    description: Customer portal URL
+              example:
+                url: https://billing.stripe.com/session/test_123
+        '401':
+          description: Authentication required
+        '404':
+          description: No active subscription
+        '500':
+          description: Stripe error
+
+  /billing/usage:
+    get:
+      summary: Get usage statistics
+      description: Get detailed usage statistics for the current billing period
+      tags:
+        - Billing
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Usage statistics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Usage'
+              example:
+                period_start: '2025-10-01T00:00:00Z'
+                period_end: '2025-10-31T23:59:59Z'
+                usage:
+                  qr_generated:
+                    count: 45
+                    limit: 1000
+                    percentage: 4.5
+                  exports_today:
+                    count: 12
+                    limit: 100
+                    percentage: 12.0
+                  templates_applied:
+                    count: 8
+                    limit: 100
+                    percentage: 8.0
+        '401':
+          description: Authentication required
+        '404':
+          description: Account not found
+
+  /billing/webhook:
+    post:
+      summary: Stripe webhook endpoint
+      description: |
+        Handle Stripe webhook events for subscription lifecycle.
+        Supported events:
+        - checkout.session.completed
+        - invoice.payment_succeeded
+        - invoice.payment_failed
+        - customer.subscription.updated
+        - customer.subscription.deleted
+      tags:
+        - Webhooks
+      parameters:
+        - in: header
+          name: stripe-signature
+          schema:
+            type: string
+          required: true
+          description: Stripe webhook signature for verification
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: string
+                  description: Event ID
+                type:
+                  type: string
+                  description: Event type
+                data:
+                  type: object
+                  description: Event data
+      responses:
+        '200':
+          description: Webhook processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                  duplicate:
+                    type: boolean
+                    description: True if event was already processed
+        '400':
+          description: Invalid payload or signature
+        '500':
+          description: Webhook processing error
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Auth0 JWT token
+
+  schemas:
+    Plan:
+      type: object
+      properties:
+        id:
+          type: string
+          enum: [free, pro, team]
+        name:
+          type: string
+        price:
+          type: integer
+          description: Price in cents
+        currency:
+          type: string
+        interval:
+          type: string
+          enum: [month, year]
+        quota:
+          type: object
+          properties:
+            qr_month:
+              type: integer
+              description: QR codes per month
+            exports_day:
+              type: integer
+              description: Exports per day
+            templates_apply:
+              type: integer
+              description: Template applications per month
+        features:
+          type: array
+          items:
+            type: string
+
+    Subscription:
+      type: object
+      properties:
+        plan:
+          type: string
+          enum: [free, trial, pro, team]
+        status:
+          type: string
+          enum: [free, trial, active, past_due, canceled, paused]
+        current_period_end:
+          type: string
+          format: date-time
+          nullable: true
+        quota_limits:
+          type: object
+          properties:
+            qr_month:
+              type: integer
+            exports_day:
+              type: integer
+            templates_apply:
+              type: integer
+        usage:
+          type: object
+          properties:
+            qr_generated:
+              type: integer
+            exports_today:
+              type: integer
+            templates_applied:
+              type: integer
+
+    Usage:
+      type: object
+      properties:
+        period_start:
+          type: string
+          format: date-time
+        period_end:
+          type: string
+          format: date-time
+        usage:
+          type: object
+          properties:
+            qr_generated:
+              $ref: '#/components/schemas/UsageMetric'
+            exports_today:
+              $ref: '#/components/schemas/UsageMetric'
+            templates_applied:
+              $ref: '#/components/schemas/UsageMetric'
+
+    UsageMetric:
+      type: object
+      properties:
+        count:
+          type: integer
+          description: Current usage count
+        limit:
+          type: integer
+          description: Maximum allowed
+        percentage:
+          type: number
+          format: float
+          description: Usage as percentage of limit
