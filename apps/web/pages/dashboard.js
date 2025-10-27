@@ -199,6 +199,40 @@ export default function Dashboard() {
           </button>
         </div>
 
+        {/* Dashboard Navigation */}
+        <div style={{ 
+          display: 'flex', 
+          gap: '1rem', 
+          marginBottom: '2rem',
+          borderBottom: '2px solid #e5e7eb',
+          paddingBottom: '0.5rem'
+        }}>
+          <a 
+            href="/dashboard"
+            style={{
+              padding: '0.5rem 1rem',
+              color: '#0070f3',
+              textDecoration: 'none',
+              fontWeight: '600',
+              borderBottom: '2px solid #0070f3',
+              marginBottom: '-2px'
+            }}
+          >
+            Library
+          </a>
+          <a 
+            href="/dashboard/analytics"
+            style={{
+              padding: '0.5rem 1rem',
+              color: '#666',
+              textDecoration: 'none',
+              fontWeight: '500'
+            }}
+          >
+            Analytics
+          </a>
+        </div>
+
         {/* Subscription Status Card */}
         {subscription && (
           <div style={{
