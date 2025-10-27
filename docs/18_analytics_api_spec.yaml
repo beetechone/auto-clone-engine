@@ -99,6 +99,19 @@ paths:
       responses:
         '200':
           description: Analytics summary retrieved successfully
+          headers:
+            X-RateLimit-Limit:
+              description: Rate limit maximum requests
+              schema:
+                type: integer
+            X-RateLimit-Remaining:
+              description: Rate limit remaining requests
+              schema:
+                type: integer
+            X-RateLimit-Reset:
+              description: Rate limit reset timestamp
+              schema:
+                type: integer
           content:
             application/json:
               schema:
@@ -151,6 +164,19 @@ paths:
       responses:
         '200':
           description: Time series data retrieved successfully
+          headers:
+            X-RateLimit-Limit:
+              description: Rate limit maximum requests
+              schema:
+                type: integer
+            X-RateLimit-Remaining:
+              description: Rate limit remaining requests
+              schema:
+                type: integer
+            X-RateLimit-Reset:
+              description: Rate limit reset timestamp
+              schema:
+                type: integer
           content:
             application/json:
               schema:
@@ -215,6 +241,19 @@ paths:
       responses:
         '200':
           description: Events retrieved successfully
+          headers:
+            X-RateLimit-Limit:
+              description: Rate limit maximum requests
+              schema:
+                type: integer
+            X-RateLimit-Remaining:
+              description: Rate limit remaining requests
+              schema:
+                type: integer
+            X-RateLimit-Reset:
+              description: Rate limit reset timestamp
+              schema:
+                type: integer
           content:
             application/json:
               schema:

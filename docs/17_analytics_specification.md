@@ -60,8 +60,8 @@ This document specifies the event tracking system for analytics in Phase 6.
 - `referrer`: HTTP referrer (if available)
 - `country`: Geo-location (if available)
 
-**Additional Fields:**
-- `ip_address`: Client IP address (anonymized)
+**Standard Fields:**
+- `ip_address`: Client IP address (anonymized - IPv4: last octet removed, IPv6: last 64 bits removed)
 - `user_agent`: Browser user agent string
 
 **Example:**
@@ -166,6 +166,8 @@ CREATE INDEX idx_shortlinks_qr_item ON shortlinks(qr_item_id);
 - `period`: "daily" or "weekly" (default: "daily")
 - `days`: Number of days (1-365, default: 30)
 
+**Note:** Monthly aggregation is planned for Phase 7.
+
 **Response:**
 ```json
 {
@@ -210,7 +212,9 @@ CREATE INDEX idx_shortlinks_qr_item ON shortlinks(qr_item_id);
 ## Privacy & Security
 
 ### Data Collection
-- **Scan Events:** IP addresses are collected but anonymized (last octet removed)
+- **Scan Events:** IP addresses are collected but anonymized
+  - **IPv4:** Last octet removed (e.g., 192.168.1.xxx)
+  - **IPv6:** Last 64 bits removed (e.g., 2001:db8:85a3::/64)
 - **User Agents:** Stored for analytics but not exposed in public APIs
 - **Geo-location:** Optional, requires user consent
 
