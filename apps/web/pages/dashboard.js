@@ -10,11 +10,46 @@ export default function Dashboard() {
   const [search, setSearch] = useState('')
   const [sortBy, setSortBy] = useState('created_at')
   const [sortOrder, setSortOrder] = useState('desc')
+  const [subscription, setSubscription] = useState(null)
+  const [quotaWarning, setQuotaWarning] = useState(null)
   const perPage = 20
 
   useEffect(() => {
     fetchQRItems()
+    fetchSubscription()
   }, [page, sortBy, sortOrder, search])
+
+  const fetchSubscription = async () => {
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000'
+    
+    try {
+      const response = await fetch(`${apiBase}/billing/subscription`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token') || 'guest-token'}`,
+        }
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        setSubscription(data)
+        
+        // Check for quota warnings
+        if (data.usage && data.quota_limits) {
+          const qrPercentage = (data.usage.qr_generated / data.quota_limits.qr_month) * 100
+          const exportPercentage = (data.usage.exports_today / data.quota_limits.exports_day) * 100
+          
+          if (qrPercentage >= 80 || exportPercentage >= 80) {
+            setQuotaWarning({
+              qr: qrPercentage >= 80,
+              export: exportPercentage >= 80
+            })
+          }
+        }
+      }
+    } catch (err) {
+      console.log('Subscription info not available:', err.message)
+    }
+  }
 
   const fetchQRItems = async () => {
     setLoading(true)
@@ -163,6 +198,119 @@ export default function Dashboard() {
             Create New QR
           </button>
         </div>
+
+        {/* Subscription Status Card */}
+        {subscription && (
+          <div style={{
+            backgroundColor: subscription.plan === 'free' ? '#fef3c7' : '#dbeafe',
+            border: `1px solid ${subscription.plan === 'free' ? '#fbbf24' : '#3b82f6'}`,
+            borderRadius: '8px',
+            padding: '1rem 1.5rem',
+            marginBottom: '2rem',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <div>
+              <h3 style={{ margin: '0 0 0.5rem 0', fontSize: '1rem', fontWeight: '600' }}>
+                {subscription.plan === 'free' ? '🆓 Free Plan' : 
+                 subscription.plan === 'pro' ? '⭐ Pro Plan' : 
+                 '👥 Team Plan'}
+              </h3>
+              <div style={{ fontSize: '0.875rem', color: '#666' }}>
+                <span>{subscription.usage?.qr_generated || 0} / {subscription.quota_limits?.qr_month || 0} QR codes this month</span>
+                {' • '}
+                <span>{subscription.usage?.exports_today || 0} / {subscription.quota_limits?.exports_day || 0} exports today</span>
+              </div>
+            </div>
+            {subscription.plan === 'free' && (
+              <button
+                onClick={() => window.location.href = '/pricing'}
+                style={{
+                  padding: '0.5rem 1rem',
+                  backgroundColor: '#0070f3',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  fontSize: '0.875rem',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}
+              >
+                Upgrade to Pro
+              </button>
+            )}
+            {subscription.plan !== 'free' && (
+              <button
+                onClick={async () => {
+                  const apiBase = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000'
+                  const response = await fetch(`${apiBase}/billing/portal`, {
+                    method: 'POST',
+                    headers: {
+                      'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                      'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ return_url: window.location.href })
+                  })
+                  const data = await response.json()
+                  if (data.url) window.location.href = data.url
+                }}
+                style={{
+                  padding: '0.5rem 1rem',
+                  backgroundColor: 'white',
+                  color: '#0070f3',
+                  border: '1px solid #0070f3',
+                  borderRadius: '6px',
+                  fontSize: '0.875rem',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}
+              >
+                Manage Subscription
+              </button>
+            )}
+          </div>
+        )}
+
+        {/* Quota Warning Toast */}
+        {quotaWarning && (
+          <div style={{
+            backgroundColor: '#fef2f2',
+            border: '1px solid #ef4444',
+            borderRadius: '8px',
+            padding: '1rem',
+            marginBottom: '1rem',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center'
+          }}>
+            <div>
+              <strong>⚠️ Approaching Quota Limit</strong>
+              <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.875rem' }}>
+                {quotaWarning.qr && 'You\'re running low on QR codes for this month. '}
+                {quotaWarning.export && 'You\'re running low on daily exports. '}
+                Consider upgrading your plan.
+              </p>
+            </div>
+            <button
+              onClick={() => window.location.href = '/pricing'}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#ef4444',
+                color: 'white',
+                border: 'none',
+                borderRadius: '6px',
+                fontSize: '0.875rem',
+                fontWeight: '600',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+                marginLeft: '1rem'
+              }}
+            >
+              Upgrade Now
+            </button>
+          </div>
+        )}
 
         {/* Search and Filters */}
         <div style={{ marginBottom: '1.5rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
